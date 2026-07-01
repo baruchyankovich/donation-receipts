@@ -1,0 +1,2 @@
+# Runtime dependencies (tkinter and sqlite3 ship with Python).
+openpyxl>=3.1

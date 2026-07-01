@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+*.spec
+
+# Virtual environments
+.venv/
+venv/
+
+# OS
+.DS_Store
+
+# Local app data / build artifacts
+*.db
+*.xlsx
+release/
