@@ -1,6 +1,6 @@
 # Donation Receipts · קבלות תרומות
 
-[![CI](https://github.com/OWNER/donation-receipts/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/donation-receipts/actions/workflows/ci.yml)
+[![CI](https://github.com/baruchyankovich/donation-receipts/actions/workflows/ci.yml/badge.svg)](https://github.com/baruchyankovich/donation-receipts/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A small, **local & offline** desktop application that helps nonprofits record
@@ -55,7 +55,10 @@ The code separates pure logic from I/O and UI so the core is easy to test:
 
 ## Getting started
 
-### Run from source
+The app is **cross-platform** — it runs on Windows, macOS and Linux. Run it
+directly from source, or download/build a packaged app per platform below.
+
+### Run from source (any OS)
 
 ```bash
 python -m pip install -r requirements.txt
@@ -75,9 +78,28 @@ pyinstaller --onefile --windowed --name DonationReceipts main.py
 ```
 
 The result is `dist/DonationReceipts.exe` — a standalone file that needs
-nothing else installed. You can also build it in the cloud with no Windows
-machine: push a `v*` tag (or run the **Build Windows executable** workflow
-manually) and download the artifact from the Actions run.
+nothing else installed. First launch may show *"Windows protected your PC"*
+(the app is unsigned) → **More info → Run anyway**.
+
+### Build a macOS app
+
+On a Mac with Python installed:
+
+```bash
+pip install pyinstaller openpyxl
+pyinstaller --windowed --name DonationReceipts main.py
+```
+
+The result is `dist/DonationReceipts.app`. Because the app is unsigned,
+macOS Gatekeeper blocks it on first launch — open it once via
+**right-click → Open** (or run `xattr -cr DonationReceipts.app`), and it opens
+normally afterwards.
+
+### Build in the cloud (no local toolchain)
+
+Both platforms build automatically on GitHub Actions: push a `v*` tag or run
+the **Build Windows executable** / **Build macOS app** workflow manually, then
+download the artifact from the Actions run.
 
 ## Development
 
