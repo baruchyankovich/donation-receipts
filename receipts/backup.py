@@ -59,20 +59,15 @@ def merge_missing(db: Database, receipts: list[Receipt]) -> tuple[int, int]:
 
     Returns ``(added, skipped)``.
     """
-    added = skipped = 0
-    for receipt in receipts:
-        if db.exists(receipt.receipt_no):
-            skipped += 1
-        else:
-            db.insert(receipt)
-            added += 1
-    return added, skipped
+    missing = [receipt for receipt in receipts if not db.exists(receipt.receipt_no)]
+    db.insert_many(missing)  # single transaction — all-or-nothing
+    return len(missing), len(receipts) - len(missing)
 
 
 def replace_database(db: Database, backup_db_path: str | Path) -> None:
     """Overwrite the live database with a backup file, then re-open the schema."""
     shutil.copy2(str(backup_db_path), str(db.path))
-    db._create_schema()  # re-run additive migration on the restored file
+    db.reopen()  # re-run additive migration on the restored file
 
 
 def snapshot_before_restore(db: Database) -> Path | None:

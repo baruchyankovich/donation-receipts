@@ -11,7 +11,7 @@ import urllib.parse
 from datetime import date
 
 from . import constants
-from .formatting import escape_html, normalize_phone_e164_il
+from .formatting import escape_html, normalize_phone_e164_il, parse_date
 from .hebrew_numbers import amount_in_shekels
 from .models import OrganizationSettings, Receipt
 
@@ -150,8 +150,6 @@ def render_annual_summary(
     donor: str, year: int, receipts: list[Receipt], settings: OrganizationSettings
 ) -> str:
     """Return HTML summarizing one donor's donations across a calendar year."""
-    from .formatting import parse_date  # local import avoids a cycle at top level
-
     ordered = sorted(receipts, key=lambda r: parse_date(r.date) or date.min)
     total = sum(r.amount for r in ordered)
     body_rows = "".join(

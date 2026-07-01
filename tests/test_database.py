@@ -2,6 +2,8 @@
 
 import sqlite3
 
+import pytest
+
 from receipts.database import Database
 from receipts.models import OrganizationSettings
 
@@ -43,6 +45,23 @@ def test_donor_autocomplete_and_contact(db):
     address, phone, email = db.latest_donor_contact("דוד לוי")
     assert phone == "050-1234567"
     assert email == "donor@example.com"
+
+
+def test_donor_names_treats_like_wildcards_literally(db):
+    db.insert(make_receipt(1, name="דוד"))
+    db.insert(make_receipt(2, name="רחל"))
+    # "%" and "_" are LIKE wildcards; used as a literal prefix they match nothing.
+    assert db.donor_names("%") == []
+    assert db.donor_names("_") == []
+    assert db.donor_names("ד") == ["דוד"]
+
+
+def test_insert_many_is_atomic(db):
+    good = make_receipt(1)
+    duplicate = make_receipt(1)  # same receipt_no -> UNIQUE violation mid-batch
+    with pytest.raises(sqlite3.IntegrityError):
+        db.insert_many([good, duplicate])
+    assert db.all_receipts() == []  # whole batch rolled back, nothing committed
 
 
 def test_settings_persist(db):

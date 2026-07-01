@@ -34,6 +34,11 @@ CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
 """
 
 
+def _escape_like(text: str) -> str:
+    """Escape LIKE wildcards so a value is matched literally, not as a pattern."""
+    return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 class Database:
     """Thin, well-typed wrapper around the SQLite schema."""
 
@@ -51,6 +56,10 @@ class Database:
         with self._connect() as conn:
             conn.executescript(_SCHEMA)
             self._migrate(conn)
+
+    def reopen(self) -> None:
+        """Re-create and migrate the schema (e.g. after the file was replaced)."""
+        self._create_schema()
 
     @staticmethod
     def _migrate(conn: sqlite3.Connection) -> None:
@@ -120,6 +129,24 @@ class Database:
                 tuple(data[col] for col in columns),
             )
 
+    def insert_many(self, receipts: list[Receipt]) -> None:
+        """Insert several receipts in a single, all-or-nothing transaction."""
+        if not receipts:
+            return
+        columns = (*Receipt.COLUMNS, "created_at")
+        placeholders = ", ".join("?" for _ in columns)
+        created_at = datetime.datetime.now().isoformat(timespec="seconds")
+        rows = []
+        for receipt in receipts:
+            data = receipt.as_dict()
+            data["created_at"] = created_at
+            rows.append(tuple(data[col] for col in columns))
+        with self._connect() as conn:
+            conn.executemany(
+                f"INSERT INTO receipts ({', '.join(columns)}) VALUES ({placeholders})",
+                rows,
+            )
+
     def update(self, receipt: Receipt) -> None:
         editable = [c for c in Receipt.COLUMNS if c != "receipt_no"]
         assignments = ", ".join(f"{col} = ?" for col in editable)
@@ -151,9 +178,9 @@ class Database:
         with self._connect() as conn:
             rows = conn.execute(
                 "SELECT donor_name, MAX(receipt_no) AS recent FROM receipts "
-                "WHERE donor_name LIKE ? AND TRIM(donor_name) <> '' "
+                "WHERE donor_name LIKE ? ESCAPE '\\' AND TRIM(donor_name) <> '' "
                 "GROUP BY donor_name ORDER BY recent DESC LIMIT ?",
-                (f"{prefix}%", limit),
+                (f"{_escape_like(prefix)}%", limit),
             ).fetchall()
         return [row["donor_name"] for row in rows]
 

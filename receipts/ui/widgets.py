@@ -58,14 +58,17 @@ class FlatButton(tk.Label):
             padx=padx,
             pady=pady,
             cursor="hand2",
+            takefocus=True,  # allow Tab navigation / keyboard activation
         )
         self._base = background
         self._command = command
-        self.bind("<Button-1>", self._on_click)
+        self.bind("<Button-1>", self._activate)
+        self.bind("<Return>", self._activate)
+        self.bind("<space>", self._activate)
         self.bind("<Enter>", lambda _e: self.configure(bg=_shade(self._base, 0.85)))
         self.bind("<Leave>", lambda _e: self.configure(bg=self._base))
 
-    def _on_click(self, _event: tk.Event) -> None:
+    def _activate(self, _event: tk.Event) -> None:
         self.configure(bg=_shade(self._base, 0.70))
         self.after(90, lambda: self.configure(bg=self._base))
         self._command()

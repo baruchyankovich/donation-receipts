@@ -86,7 +86,8 @@ class SettingsDialog(tk.Toplevel):
         tk.Label(self, text="תיקיית גיבוי:", anchor="e", bg=_BG, font=("Arial", 11, "bold")).grid(
             row=row, column=1, sticky="e", padx=8, pady=8
         )
-        self._backup_var = tk.StringVar(value=self._settings.backup_dir or "(לא נבחרה)")
+        self._backup_dir = self._settings.backup_dir  # actual state (source of truth)
+        self._backup_var = tk.StringVar(value=self._backup_dir or "(לא נבחרה)")
         frame = tk.Frame(self, bg=_BG)
         frame.grid(row=row, column=0, sticky="we", padx=8, pady=8)
         FlatButton(
@@ -124,6 +125,7 @@ class SettingsDialog(tk.Toplevel):
             title="בחר תיקיית גיבוי (למשל תיקיית Google Drive)", parent=self
         )
         if directory:
+            self._backup_dir = directory
             self._backup_var.set(directory)
 
     def _save(self) -> None:
@@ -136,7 +138,7 @@ class SettingsDialog(tk.Toplevel):
             address_line=self._vars["address_line"].get().strip(),
             services_line=self._vars["services_line"].get().strip(),
             starting_receipt_number=int(start),
-            backup_dir="" if self._backup_var.get() == "(לא נבחרה)" else self._backup_var.get(),
+            backup_dir=self._backup_dir,
             custom_logo_base64=self._settings.custom_logo_base64,
             custom_logo_mime=self._settings.custom_logo_mime,
         )

@@ -1,0 +1,25 @@
+name: Build Windows executable
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip pyinstaller openpyxl
+      - name: Build single-file executable
+        run: pyinstaller --onefile --windowed --noconfirm --clean --name DonationReceipts main.py
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DonationReceipts-windows
+          path: dist/DonationReceipts.exe
+          if-no-files-found: error
